@@ -171,8 +171,8 @@ def plot_bandpass(caltable, amp = False, phase = False, plotdir = '/import/extre
         flag_array = flag_var_col[row]
         amps = np.abs(data_array)
         phases = np.arctan2(np.imag(data_array), np.real(data_array))
-        unflagged =np.logical_not(flag_array)
-        temp_array =amps[unflagged]
+        unflagged = np.logical_not(flag_array)
+        temp_array = amps[unflagged]
         
         max_amp = 0.0
         max_phase = 0.0
@@ -185,7 +185,7 @@ def plot_bandpass(caltable, amp = False, phase = False, plotdir = '/import/extre
         temp_array = np.abs(phases[unflagged])
         
         if len(temp_array) > 0:
-            max_phase_tmp = np.amax(temp_array)
+            max_phase_tmp = np.amax(temp_array)*180.0/np.pi
             if max_phase_tmp > max_phase:
                 max_phase = max_phase_tmp
         
