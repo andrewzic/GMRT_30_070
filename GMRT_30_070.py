@@ -135,13 +135,11 @@ for s in [flux_cal_name, phase_cal_name, target_name, flux_cal_2_name]:
     gainfields = [flux_cal_name, s]
     final_applycal(msname, s, gaintables, interps, gainfields)
 
-#inspect data after it has been calibrated
-for s in [flux_cal_name, phase_cal_name, target_name]:
-    diagnostic_plotms(msname, caldir, s)
-    
-"""
 #now image each field
 for s_key in field_dict:
+
+    if s_key != '3':
+        continue
     s_name = field_dict[s_key]
     imagename = casadir + s_name + '_test_im'
     fitsname = casadir + s_name + '_test.fits'
@@ -167,4 +165,7 @@ for s_key in field_dict:
     '''
     exportfits(imagename = imagename + '.image',
                fitsimage = fitsname)
-"""
+
+#inspect data after it has been calibrated
+for s in [flux_cal_name]:#, phase_cal_name, target_name]:
+    diagnostic_plotms(msname, caldir, s)
