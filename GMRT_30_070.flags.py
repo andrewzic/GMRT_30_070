@@ -10,10 +10,11 @@ def apply_manual_flags(msname):
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W01') #these antennas were down. see obs log
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W03')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'S06')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E06') #amplitude and phase errors
 
     flagdata(vis = msname, mode = 'manual', flagbackup = True, uvrange='0~3.0klambda') #flag short baselines.
 
-    flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:0~5')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:0~6')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:23~25')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:57~100')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:119~121')
