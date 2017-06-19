@@ -573,6 +573,10 @@ def final_fluxscale(msname, flux_cal_name, other_cals, caldir, gaincal_name):
                               fluxtable = fluxcal_name,
                               reference = flux_cal_name,
                               transfer = other_cals)
+    print("""Fluxscale results:
+    """)
+    print(fluxscale_res)
+    
     return fluxcal_name
         
 
