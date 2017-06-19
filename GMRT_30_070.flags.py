@@ -26,7 +26,7 @@ def apply_manual_flags(msname):
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W03')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'S06')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E05') #phase errors in secondary cal
-    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E06') #amplitude and phase errors, but causes errors when flagged out
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E06') #amplitude and phase errors in primary cal
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W06') #bad when calibration solutions are applied to secondary calibrator
 
 
@@ -45,7 +45,7 @@ def apply_manual_flags(msname):
 #    flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:254')
     
     flagdata(vis = msname, mode = 'manual', flagbackup = True, spw = '0:244~255') #the last few channels have phase errors after calibration.
-
+#W05;!S03;!W04;!E02;!C13;!W05; !E04!C00&W05;!C01&W05;!C02&W05; !S04&W05; !C03&E04; !C06&E04; !C08&E04; !C09&E04; !C11&E04; !C12&E04
 
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&W02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C02&W02')
@@ -56,7 +56,9 @@ def apply_manual_flags(msname):
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C08&W02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C10&W02')
 
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&C03')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&E02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&W05')
     #flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&E05')
     #flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&E06')
     #flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&E05')
@@ -64,34 +66,60 @@ def apply_manual_flags(msname):
     #flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&W05')
     #flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C00&W06')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C01&C03')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C01&C04')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C01&E02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C01&S03')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C01&W05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C02&E05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C02&E04')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C02&S03')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C02&W05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C03&C08')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C03&C10')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C03&C12')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C03&E02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C03&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C04&C05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C04&C08')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C04&C13')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C05&C08')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C05&C11')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C06&C09')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C06&C13')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C06&E02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C06&E04')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C08&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C08&W05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C09&C13')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C09&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C09&E05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C09&W02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C10&E02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C10&S02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C10&W05')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C11&E02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C11&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C11&W02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C11&C12')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C11&C13')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C12&W02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C12&E04')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C13&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'C13&S01')
+
 
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&E03')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&E05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&E06')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&W02')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&W04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&W05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E02&S02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E03&E04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E03&E05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E03&E06')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E03&W04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E03&W05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E04&E05')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'E04&E06')
@@ -107,6 +135,7 @@ def apply_manual_flags(msname):
 
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'S01&S02')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'S03&S04')
+    flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'S04&W05')
 
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W02&W04')
     flagdata(vis = msname, mode = 'manual', flagbackup = True, antenna = 'W02&W05')
