@@ -4,6 +4,22 @@ import shutil
 import datetime
 import numpy as np
 
+def flag_stats(msname, note = ''):
+    default('flagdata')
+    t = flagdata(vis = msname, mode='summary', field='', action='calculate')
+    print('FLAG STATISTICS (%s)' %note)
+    print('\nAntenna, ')
+    for k in sorted(t['antenna']):
+        print(k +': %.2f%% - ' % (100.*t['antenna'][k]['flagged']/t['antenna'][k]['total']))
+    print('\nCorrelation, ')
+    for k, v in t['correlation'].items():
+        print(k +': %.2f%% - ' % (100.*v['flagged']/v['total']))
+    print('\nSpw, ')
+    for k, v in t['spw'].items():
+        print(k +': %.2f%% - ' % (100.*v['flagged']/v['total']))
+    print('\nTotal: %.2f%%' % (100.*t['flagged']/t['total']))
+
+
 def flagcal(caltable, sigma = 5, cycles = 3):
     """from christene's pipeline """
     
