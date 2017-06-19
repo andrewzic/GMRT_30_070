@@ -124,7 +124,6 @@ bandpass_name = final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, it
 #determine antenna gains for each calibrator source
 final_gaincal(msname, minsnr, flux_cal_name, flux_cal_name, refant, caldir, iter_num_final, False, bandpass_name)
 final_gaincal(msname, minsnr, phase_cal_name, flux_cal_name, refant, caldir, iter_num_final, True, bandpass_name)
-final_gaincal(msname, minsnr, target_name, flux_cal_name, refant, caldir, iter_num_final, True, bandpass_name)
 gaincal_name = final_gaincal(msname, minsnr, flux_cal_2_name, flux_cal_name, refant, caldir, iter_num_final, True, bandpass_name)
 
 #bootstrap flux density for target source:
@@ -132,43 +131,57 @@ fluxcal_name = final_fluxscale(msname, [flux_cal_name], [phase_cal_name, flux_ca
 print("""applying final calibrations
 """)
 #apply final calibrations
-for s in [flux_cal_name, phase_cal_name, target_name, flux_cal_2_name]:
-    gaintables = [bandpass_name, fluxcal_name]
-    interps = ['', '']
+
+gaintables = [bandpass_name, fluxcal_name]
+interps = ['', '']
+
+for s in [flux_cal_name, phase_cal_name, flux_cal_2_name]:
     gainfields = [flux_cal_name, s]
     final_applycal(msname, s, gaintables, interps, gainfields)
 
-#now image each field
-# for s_key in field_dict:
 
-#     if s_key != '3':
-#         continue
-#     s_name = field_dict[s_key]
-#     imagename = casadir + s_name + '_test_im'
-#     fitsname = casadir + s_name + '_test.fits'
-#     clean(vis = msname,
-#           imagename = imagename,
-#           field = s_name,
-#           mode = 'mfs',
-#           niter = 1000,
-#           threshold = '0.6mJy',
-#           interactive = True,
-#           imsize = [1024, 1024],
-#           cell = '0.39arcsec',
-#           stokes = 'I',
-#           weighting = 'natural')
-#     #widefield imaging
-#     '''
-#     gridmode = 'widefield',
-#     wprojplanes = 
-#     num wplanes = bmax/lambda * FOV^2
-#     facets = 1?
-#     threshold = 3*sigma
-#     niter = 1000
-#     '''
-#     exportfits(imagename = imagename + '.image',
-#                fitsimage = fitsname)
+####
+#now apply calibrations to target
+###
+
+gainfields = [flux_cal_name, phase_cal_name]
+interps = ['', 'linear']
+
+final_applycal(msname, target_name, gaintables, interps, gainfields)
+
+#now image each field
+for s_key in field_dict:
+
+    s_name = field_dict[s_key]
+    imagename = casadir + s_name + '_test_im'
+    fitsname = casadir + s_name + '_test.fits'
+    clean(vis = msname,
+          imagename = imagename,
+          field = s_name,
+          mode = 'mfs',
+          niter = 0,
+          threshold = '0.6mJy',
+          interactive = False,
+          imsize = [2048, 2048],
+          cell = '0.51arcsec',
+          stokes = 'I',
+          weighting = 'natural')
+    #widefield imaging
+    '''
+    gridmode = 'widefield',
+    wprojplanes = 
+    num wplanes = bmax/lambda * FOV^2
+    facets = 1?
+    threshold = 3*sigma
+    niter = 1000
+    '''
+    exportfits(imagename = imagename + '.image',
+               fitsimage = fitsname)
 
 #inspect data after it has been calibrated
 for s in [flux_cal_name, phase_cal_name]:#, target_name]:
     diagnostic_plotms(msname, caldir, s)
+
+
+
+
