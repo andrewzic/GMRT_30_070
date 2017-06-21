@@ -677,6 +677,16 @@ def image(field, msname, casadir, niter, threshold, interactive = True, im_size 
           stokes = stokes,
           weighting = weighting)
     
+    #widefield imaging
+    '''
+    gridmode = 'widefield',
+    wprojplanes = 
+    num wplanes = bmax/lambda * FOV^2
+    facets = 1?
+    threshold = 3*sigma
+    niter = 1000
+    '''
+    
     exportfits(imagename = imagename + '.image',
                fitsimage = fitsname,
                overwrite = True)
