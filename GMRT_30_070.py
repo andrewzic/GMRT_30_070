@@ -78,6 +78,7 @@ caldir = casadir
 refant = 'C05' #reference antenna for phase calibrations
 minsnr = 3.0
 
+int_time = 16.1061
 
 """
 import the data:
@@ -175,7 +176,8 @@ for s_key in field_dict:
           im_size = [4096, 4096],
           cell_size = 0.51,
           stokes = 'I',
-          weighting = 'natural')
+          weighting = 'natural',
+          usescratch = True)
 
 
 
