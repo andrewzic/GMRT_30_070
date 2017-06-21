@@ -657,3 +657,26 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
     yaxis = 'imag'
     plot_file = '%s%s_imag_real_corrected.png' %(caldir, flux_cal_name)
     plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+
+def image(field, msname, casadir, niter, threshold, interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural'):
+    
+    cell_size = '%farcsec' %cell_size
+    
+    imagename = '%s%s_%i_natural' %(casadir, field, niter)
+    fitsname = '%s%s_%i_natural.fits' %(casadir, field, niter)
+    
+    clean(vis = msname,
+          imagename = imagename,
+          field = field,
+          mode = 'mfs',
+          niter = niter,
+          threshold = threshold,
+          interactive = interactive,
+          imsize = im_size,
+          cell = cell_size,
+          stokes = stokes,
+          weighting = weighting)
+    
+    exportfits(imagename = imagename + '.image',
+               fitsimage = fitsname,
+               overwrite = True)
