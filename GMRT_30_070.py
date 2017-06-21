@@ -149,34 +149,35 @@ interps = ['', 'linear']
 
 final_applycal(msname, target_name, gaintables, interps, gainfields)
 
+cell_size = 0.51 #arcsec
+expected_rms_cal = 0.263 #mJy
+expected_rms_target = 0.05 #around this mark
+clean_threshold_cal  = 3.0*expected_rms_cal
+clean_threshold_target = 0.1 #3.0*expected_rms_target
+
 #now image each field
 for s_key in field_dict:
-
+    
     s_name = field_dict[s_key]
-    imagename = casadir + s_name + '_test_im'
-    fitsname = casadir + s_name + '_test.fits'
-    clean(vis = msname,
-          imagename = imagename,
-          field = s_name,
-          mode = 'mfs',
-          niter = 0,
-          threshold = '0.6mJy',
-          interactive = False,
-          imsize = [2048, 2048],
-          cell = '0.51arcsec',
+    
+    if s_name == 'TVLM513-46':
+        threshold = '%fmJy' %clean_threshold_target
+    else:
+        threshold = '%fmJy' %clean_threshold_cal
+        continue
+        
+    image(s_name,
+          msname,
+          casadir,
+          15000,
+          threshold,
+          interactive = True,
+          im_size = [4096, 4096],
+          cell_size = 0.51,
           stokes = 'I',
           weighting = 'natural')
-    #widefield imaging
-    '''
-    gridmode = 'widefield',
-    wprojplanes = 
-    num wplanes = bmax/lambda * FOV^2
-    facets = 1?
-    threshold = 3*sigma
-    niter = 1000
-    '''
-    exportfits(imagename = imagename + '.image',
-               fitsimage = fitsname)
+
+
 
 #inspect data after it has been calibrated
 for s in [flux_cal_name, phase_cal_name]:#, target_name]:
