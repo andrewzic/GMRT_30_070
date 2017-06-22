@@ -660,12 +660,19 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
     plot_file = '%s%s_imag_real_corrected.png' %(caldir, flux_cal_name)
     plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
-def image(field, msname, casadir, niter, threshold, interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural', usescratch = False):
+def image(field, msname, casadir, niter, threshold, mask = [], interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural', usescratch = False, scan = '', iter_num = None, timerange = ''):
     
     cell_size = '%farcsec' %cell_size
+    image_prefix = os.path.abspath(msname).replace('.ms', '')
     
-    imagename = '%s%s_%i_natural' %(casadir, field, niter)
-    fitsname = '%s%s_%i_natural.fits' %(casadir, field, niter)
+    imagename = '%s' %image_prefix
+    for element in [field, scan, iter_num, niter, weighting]:
+        if element != '' or element is not None:
+            imagename += '_%s_' %(str(element))
+
+    fitsname = imagename + '.fits'
+    #imagename = '%s_%s_%i_%s_%i' %(image_prefix, field, niter, weighting, iter_num)
+    #fitsname = '%s_%s_%i_%s_%i.fits' %(image_prefix, field, niter, weighting, iter_num)
     
     clean(vis = msname,
           imagename = imagename,
@@ -674,11 +681,14 @@ def image(field, msname, casadir, niter, threshold, interactive = True, im_size 
           niter = niter,
           threshold = threshold,
           interactive = interactive,
+          mask = mask,
           imsize = im_size,
           cell = cell_size,
           stokes = stokes,
           weighting = weighting,
-          usescratch = usescratch)
+          usescratch = usescratch,
+          timerange = timerange
+    )
     
     #widefield imaging
     '''
@@ -693,3 +703,40 @@ def image(field, msname, casadir, niter, threshold, interactive = True, im_size 
     exportfits(imagename = imagename + '.image',
                fitsimage = fitsname,
                overwrite = True)
+
+
+def split_msname(msname, scan = '', spw = '', timerange = '', field = '', correlation = '', datacolumn = 'corrected', timebin = '0s', width = 1, combine = False):
+    
+    outputvis = msname
+
+    all_elements = {'scan': scan, 'spw': spw, 'timerange': timerange, 'field': field, 'correlation': correlation}
+    bin_elements = {'timeres': timebin, 'freqres': width}
+
+    for key in all_elements:
+        element = all_elements[key]
+        if element != '':
+            if key == field or key == correlation:
+                outputvis = outputvis.replace('.ms', '_%s.ms' %str(element))
+            else:
+                outputvis = outputvis.replace('.ms', '_%s%s.ms' %(key, str(element)))
+
+    for key in bin_elements:
+        element = bin_elements[key]
+        if element != '':
+            outputvis.replace('.ms', '_%s%s' %(key, str(element)))
+        
+
+    split(vis = msname,
+          outputvis = outputvis,
+          scan = scan,
+          spw = spw,
+          timerange = timerange,
+          field = field,
+          correlation = correlation,
+          datacolumn = datacolumn,
+          timebin = timebin,
+          width = width)
+    
+    return outputvis
+          
+          
