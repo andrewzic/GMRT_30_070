@@ -294,8 +294,10 @@ def initial_flagging(msname):
     perform basic initial flagging: quack, clip zeros
     """
     
+    #quack flag beginning and end of scans.
     default('flagdata')
-    flagdata(vis = msname, mode = 'quack', quackinterval = 1, quackmode = 'beg', action = 'apply', flagbackup = False)
+    flagdata(vis = msname, mode = 'quack', quackinterval = 1, quackmode = 'beg', action = 'apply', flagbackup = False) #beginning
+    flagdata(vis = msname, mode = 'quack', quackinterval = 1, quackmode = 'endb', action = 'apply', flagbackup = False) #end
     
     default('flagdata')
     flagdata(vis = msname, mode = 'clip', clipzeros = True, correlation = 'ABS_ALL', action = 'apply', flagbackup = False)
@@ -658,7 +660,7 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
     plot_file = '%s%s_imag_real_corrected.png' %(caldir, flux_cal_name)
     plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
-def image(field, msname, casadir, niter, threshold, interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural'):
+def image(field, msname, casadir, niter, threshold, interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural', usescratch = False):
     
     cell_size = '%farcsec' %cell_size
     
@@ -675,7 +677,8 @@ def image(field, msname, casadir, niter, threshold, interactive = True, im_size 
           imsize = im_size,
           cell = cell_size,
           stokes = stokes,
-          weighting = weighting)
+          weighting = weighting,
+          usescratch = usescratch)
     
     #widefield imaging
     '''
