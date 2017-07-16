@@ -342,7 +342,7 @@ def init_setjy(msname, flux_cal_name):
     setjy_res = setjy(vis = msname, field = flux_cal_name, standard = 'Perley-Butler 2013', scalebychan = True, usescratch = True)
     return setjy_res
 
-def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
+def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
     
     """
     perform initial bandpass calibration. steps:
@@ -350,7 +350,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
     2) initial bandpass calibration using flux calibrator, taking solutions from phase cal in step 1
     
     """
-    spw = '0:150~174'
+    spwin = '0:150~174'
     
     for step in ['cycle1', 'final']:
         gaintables = []
@@ -362,8 +362,8 @@ def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
-                refant = refant,
-                spw = spw,
+                refant = ref_ant,
+                spw = spwin,
                 calmode = 'p',
                 solint = 'int')
         
@@ -401,7 +401,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
                 field = flux_cal_name,
                 selectdata = True,
                 solint = 'int',
-                refant = refant,
+                refant = ref_ant,
                 interp = interp + ['nearest'],
                 minsnr = minsnr,
                 gaintype = 'G',
@@ -423,7 +423,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
                  field = flux_cal_name,
                  solint = 'inf',
                  combine = 'scan,field',
-                 refant = refant,
+                 refant = ref_ant,
                  interp = interp,
                  minsnr = minsnr,
                  bandtype = 'B',
@@ -446,9 +446,9 @@ def init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
 
 
 
-def final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
+def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
     
-    spw = '0:150~174'
+    spwin = '0:150~174'
     
     for step in ['final']:
         gaintables = []
@@ -460,8 +460,8 @@ def final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
-                refant = refant,
-                spw = spw,
+                refant = ref_ant,
+                spw = spwin,
                 calmode = 'p',
                 solint = 'int')
     
@@ -500,7 +500,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
                 field = flux_cal_name,
                 selectdata = True,
                 solint = 'int',
-                refant = refant,
+                refant = ref_ant,
                 interp = interp + ['nearest'],
                 minsnr = minsnr,
                 gaintype = 'G',
@@ -522,7 +522,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
                  field = flux_cal_name,
                  solint = 'inf',
                  combine = 'scan,field',
-                 refant = refant,
+                 refant = ref_ant,
                  interp = interp,
                  minsnr = minsnr,
                  bandtype = 'B',
@@ -533,17 +533,17 @@ def final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num):
 
 
 
-def final_gaincal(msname, minsnr, field, flux_cal_name, refant, caldir, iter_num, append_bool, bandpass_name):
+def final_gaincal(msname, minsnr, field_name, flux_cal_name, ref_ant, caldir, iter_num, append_bool, bandpass_name):
     
     gaintables = [bandpass_name]
-    spw = '0:20~240'
+    spwin = '0:20~240'
     gaincal_name = '%s%s_gaincal_final.Gap' %(caldir, flux_cal_name)
     gaincal(vis = msname,
             caltable = gaincal_name,
-            field = field,
+            field = field_name,
             solint = 'int',
-            spw = spw,
-            refant = refant,
+            spw = spwin,
+            refant = ref_ant,
             calmode = 'ap',
             gaintype = 'G',
             gaintable = gaintables,
@@ -563,6 +563,105 @@ def final_gaincal(msname, minsnr, field, flux_cal_name, refant, caldir, iter_num
 
 
 
+def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, iter_num, gaincal_name, bandpass_name):
+    if pol_cal_name == '3C286':
+        alpha = -0.4605 #from perley & butler 2013
+        pol_pa  = 33.0*np.pi/180.0 #pa of 3C286
+        pol_frac = 0.095 #2013ApJS..206...16P
+        #i0 = 15.3203 #from setjy on 3C286
+        i0 = 16.6361 #from fluxscale using 3C48 and transferred to 3C286
+        p0 = pol_frac*i0
+        q0 = p0*cos(66.0*pi/180.0)
+        u0 = p0*sin(66.0*pi/180.0)
+    
+    """
+    generate the polarisation model
+    """
+    
+    delmod(msname)
+    setjy(vis = msname,
+          field = pol_cal_name,
+          standard = 'manual',
+          spw = '0',
+          fluxdensity = [i0, q0, u0, 0],
+          spix = alpha,
+          reffreq = '1371.065MHz',
+          scalebychan = True,
+          usescratch = False)
+    
+    """
+    solve for cross-hand delays
+    """
+    spwin = '0:20~240' #widest possible range ignoring edge channels
+    polcal_name = '%s%s_polcal_final.Kcross' %(caldir, pol_cal_name)
+    gaincal(vis = msname,
+            caltable = polcal_name,
+            field = pol_cal_name,
+            spw = spwin,
+            gaintype = 'KCROSS',
+            solint = 'inf', 
+            combine = 'scan',
+            refant = ref_ant,
+            gaintable = [bandpass_name, gaincal_name],
+            gainfield = ['', '3C286'],
+            interp = ['nearest', 'linear'],
+            parang = True)
+
+    plotcal(caltable = polcal_name , xaxis = 'antenna', yaxis = 'delay')
+    
+    """
+    solve for leakage terms
+    """
+    polcal2_name = '%s%s_polcal_final.D' %(caldir, pol_cal_2_name)
+    polcal(vis = msname,
+           caltable = polcal2_name,
+           field = pol_cal_2_name,
+           spw = spwin,
+           refant = ref_ant,
+           poltype = 'Df',
+           solint = 'inf',
+           combine = 'scan',
+           gaintable = [bandpass_name, gaincal_name, polcal_name],
+           gainfield = ['', pol_cal_2_name, ''],
+           interp = ['nearest','linear','nearest'])
+    
+    plotcal(caltable = polcal2_name, 
+            xaxis = 'chan',
+            yaxis='amp', 
+            spw='',
+            field='',
+            iteration='antenna')
+
+    plotcal(caltable = polcal2_name, 
+            xaxis = 'chan',
+            yaxis='phase', 
+            spw='',
+            field='',
+            plotrange=[-1,-1,-180,180],
+            iteration='antenna')
+    
+    """
+    solve for R-L polarisation angle
+    """
+    polcal3_name = '%s%s_polcal_final.X' %(caldir, pol_cal_2_name)
+    polcal(vis = msname,
+           caltable = polcal3_name,
+           field = pol_cal_2_name,
+           combine = 'scan',
+           poltype = 'Xf',
+           solint = 'inf',
+           gaintable = [bandpass_name, gaincal_name, polcal_name, polcal2_name],
+           gainfield = ['', pol_cal_2_name, '', ''],
+           interp = ['nearest', 'linear', 'nearest', 'nearest'])
+
+    plotcal(caltable = polcal3_name,
+            xaxis = 'chan',
+            yaxis = 'phase')
+    
+    return polcal_name, polcal2_name, polcal3_name
+    
+    
+
 def final_fluxscale(msname, flux_cal_name, other_cals, caldir, gaincal_name):
     
     #flux_cal_name is a list, ['3C286']
@@ -575,15 +674,17 @@ def final_fluxscale(msname, flux_cal_name, other_cals, caldir, gaincal_name):
                               fluxtable = fluxcal_name,
                               reference = flux_cal_name,
                               transfer = other_cals)
+    
     print("""Fluxscale results:
     """)
-    print(fluxscale_res)
+    for key in fluxscale_res:
+        print(fluxscale_res[key])
     
     return fluxcal_name
         
 
 
-def final_applycal(msname, flux_cal_name, gaintables, interps, gainfields):
+def final_applycal(msname, flux_cal_name, gaintables, interps, gainfields, par_ang = False):
     
     default('applycal')
     applycal(vis = msname,
@@ -593,6 +694,7 @@ def final_applycal(msname, flux_cal_name, gaintables, interps, gainfields):
              interp = interps,
              applymode = 'calflagstrict',
              calwt = False,
+             parang = par_ang,
              flagbackup = True)
     return True
                                   
@@ -611,73 +713,104 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
     
     xaxis = 'time'
     yaxis = 'amp'
-    field = ''
+    field_name = ''
     plot_file = '%sallfields_amp_time_corrected.png' %(caldir)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
     
-    field = flux_cal_name
+    field_name = flux_cal_name
     plot_file = '%s%s_amp_time_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
 
     xaxis = 'baseline'
     plot_file = '%s%s_amp_baseline_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = 'channel', plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = 'channel', plotfile = plot_file, showgui = showgui)
     
     xaxis = 'chan'
     plot_file = '%s%s_amp_chan_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
     
     xaxis = 'uvwave'
     plot_file = '%s%s_amp_uvwave_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
     
     yaxis = 'phase'
     plotrange = [0,0,-180,180]
-    field = flux_cal_name
+    field_name = flux_cal_name
     for i in range(30):
         xaxis = 'time'
         antenna = str(i)
         plot_file = '%s%s_phase_time_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
         
         xaxis = 'chan'
         plot_file = '%s%s_phase_chan_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
         xaxis = 'uvwave'
         plot_file = '%s%s_phase_uvwave_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
         
 
     plotrange = [0,0,0,0]
     antenna = ''
     xaxis = 'amp'
     plot_file = '%s%s_phase_amp_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
     xaxis = 'real'
     yaxis = 'imag'
     plot_file = '%s%s_imag_real_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
-def image(field, msname, casadir, niter, threshold, mask = [], interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural', usescratch = False, scan = '', iter_num = None, timerange = ''):
+
+
+
+def image(field_name, msname, casadir, niter, threshold, mask = [], interactive = True, im_size = [4096, 4096], cell_size = 0.51, stokes = 'I', weighting = 'natural', usescratch = False, scan = '', iter_num = None, timerange = '', image_jd = None, image_duration = None, width = None, start_freq = None):
     
+    if timerange != '' and image_jd == 0:
+        print("""
+if you have entered a timerange to image over, please give the (valid) image_jd as input as well
+        """)
+        return False
+        
     cell_size = '%farcsec' %cell_size
     image_prefix = os.path.abspath(msname).replace('.ms', '')
     
     imagename = '%s' %image_prefix
-    for element in [field, scan, iter_num, niter, weighting]:
-        if element != '' or element is not None:
-            imagename += '_%s_' %(str(element))
+    element_dict = {'field': field_name, 'image_jd': image_jd, 'image_duration': image_duration, 'niter': niter, 'thresh': threshold, 'weighting': weighting}
+    element_names = ['field', 'image_jd', 'image_duration', 'start_freq', 'width', 'niter', 'thresh', 'weighting']
+    element_values = [field_name, image_jd, image_duration, start_freq, width, niter, threshold, weighting]
+    for idx, val in enumerate(element_values):
+        name = element_names[idx]
+            
+        if val != '' and val is not None:
+            if name == 'width':
+                val = str(sp_res*val)+'kHz'
+            if name == 'start_freq':
+                val = str(val) + 'MHz'
+                
+            if name == 'niter' or name == 'thresh':
+                imagename += '_%s%s' %(name, str(val))
+            else:
+                imagename += '_%s' %(str(val))
 
     fitsname = imagename + '.fits'
-    #imagename = '%s_%s_%i_%s_%i' %(image_prefix, field, niter, weighting, iter_num)
-    #fitsname = '%s_%s_%i_%s_%i.fits' %(image_prefix, field, niter, weighting, iter_num)
+    #imagename = '%s_%s_%i_%s_%i' %(image_prefix, field_name, niter, weighting, iter_num)
+    #fitsname = '%s_%s_%i_%s_%i.fits' %(image_prefix, field_name, niter, weighting, iter_num)
     
+    if width is not None:
+        mode = 'channel'
+    else:
+        mode = 'mfs'
+
+    print("""
+image being saved to %s
+    """ %imagename)
+
     clean(vis = msname,
           imagename = imagename,
-          field = field,
-          mode = 'mfs',
+          field = field_name,
+          mode = mode,
           niter = niter,
           threshold = threshold,
           interactive = interactive,
@@ -687,7 +820,8 @@ def image(field, msname, casadir, niter, threshold, mask = [], interactive = Tru
           stokes = stokes,
           weighting = weighting,
           usescratch = usescratch,
-          timerange = timerange
+          timerange = timerange,
+          width = width,
     )
     
     #widefield imaging
@@ -703,19 +837,24 @@ def image(field, msname, casadir, niter, threshold, mask = [], interactive = Tru
     exportfits(imagename = imagename + '.image',
                fitsimage = fitsname,
                overwrite = True)
+    
+    return fitsname
 
 
-def split_msname(msname, scan = '', spw = '', timerange = '', field = '', correlation = '', datacolumn = 'corrected', timebin = '0s', width = 1, combine = False):
+
+
+
+def split_msname(msname, scan = '', spw = '', timerange = '', field_name = '', correlation = '', datacolumn = 'corrected', timebin = '0s', width = 1, combine = False):
     
     outputvis = msname
 
-    all_elements = {'scan': scan, 'spw': spw, 'timerange': timerange, 'field': field, 'correlation': correlation}
+    all_elements = {'scan': scan, 'spw': spwin, 'timerange': timerange, 'field': field_name, 'correlation': correlation}
     bin_elements = {'timeres': timebin, 'freqres': width}
 
     for key in all_elements:
         element = all_elements[key]
         if element != '':
-            if key == field or key == correlation:
+            if key == field_name or key == correlation:
                 outputvis = outputvis.replace('.ms', '_%s.ms' %str(element))
             else:
                 outputvis = outputvis.replace('.ms', '_%s%s.ms' %(key, str(element)))
@@ -729,9 +868,9 @@ def split_msname(msname, scan = '', spw = '', timerange = '', field = '', correl
     split(vis = msname,
           outputvis = outputvis,
           scan = scan,
-          spw = spw,
+          spw = spwin,
           timerange = timerange,
-          field = field,
+          field = field_name,
           correlation = correlation,
           datacolumn = datacolumn,
           timebin = timebin,
@@ -739,4 +878,4 @@ def split_msname(msname, scan = '', spw = '', timerange = '', field = '', correl
     
     return outputvis
           
-          
+    
