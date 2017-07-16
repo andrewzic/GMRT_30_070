@@ -1,8 +1,8 @@
 import os
 import shutil
 import time
-
-execfile('/import/extreme2/azic/phd/GMRT_30_070/GMRT_pipeline_azic.py')
+import glob
+#execfile('/import/extreme2/azic/phd/GMRT_30_070/GMRT_pipeline_azic.py')
 
 
 """
@@ -12,7 +12,7 @@ initial setup - filenames, creating directories for this run etc.
 path = '/import/extreme2/azic/phd/GMRT_30_070/'
 
 
-casadir = '%sCASA/22062017_122645/' %path
+casadir = sorted(glob.glob('%sCASA/10072017_*' %path))[-1]+'/'
 
 os.chdir(casadir)
 print('''
@@ -60,6 +60,22 @@ scan_end_times = {'1': '09:05:18.6', '2': '09:17:07.3', '3': '09:50:40.5', '4': 
 int_time = 16.1061
 #18 integrations for phase cal (4.8317 minutes)
 #111 integrations for target (29.795 minutes)
+
+sp_res = 130.208 #spectral resolution, in kHz
+bw = 33333.3 #bandwidth in kHz
+start_freq = 1371.065 #starting frequency in MHz
+central_freq = 1387.6667 #central freq in MHz
+numchan = 256 #number of channels
+
+
+#TVLM513-46 coords
+
+#ra = 225.284147417
+#dec = 22.8338921306
+
+#after recalculating with proper motion into account using Forbrich 2013
+ra = 225.283873944 
+dec = 22.8336770289
 
 cell_size = 0.51 #arcsec
 expected_rms_cal = 0.263 #mJy
