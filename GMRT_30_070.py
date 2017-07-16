@@ -76,7 +76,7 @@ if not os.path.exists(caldir):
     os.mkdir(caldir)
 """
 caldir = casadir
-refant = 'C05' #reference antenna for phase calibrations
+ref_ant = 'C05' #reference antenna for phase calibrations
 minsnr = 3.0
 
 ###
@@ -117,7 +117,7 @@ iter_num = 0
 
 # while iter_num < 1:
 
-#     init_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num)
+#     init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num)
 
 #     #auto_r_flagging(msname)
     
@@ -132,36 +132,69 @@ final calibrations
 default('clearcal')
 clearcal(vis = msname)
 setjy_res = init_setjy(msname, flux_cal_name) #set flux density scale
-bandpass_name = final_bandpass(msname, minsnr, flux_cal_name, refant, caldir, iter_num_final) #final bandpass calibration
+bandpass_name = final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num_final) #final bandpass calibration
 
+print('''
+beginning gain calibration pass 1. 
+Refant is %s
+''' %ref_ant)
 
 #determine antenna gains for each calibrator source
-final_gaincal(msname, minsnr, flux_cal_name, flux_cal_name, refant, caldir, iter_num_final, False, bandpass_name)
-final_gaincal(msname, minsnr, phase_cal_name, flux_cal_name, refant, caldir, iter_num_final, True, bandpass_name)
-gaincal_name = final_gaincal(msname, minsnr, flux_cal_2_name, flux_cal_name, refant, caldir, iter_num_final, True, bandpass_name)
+final_gaincal(msname, minsnr, flux_cal_name, flux_cal_name, ref_ant, caldir, iter_num_final, False, bandpass_name)
+print('''
+beginning gain calibration pass 2. 
+Refant is %s
+''' %ref_ant)
+final_gaincal(msname, minsnr, phase_cal_name, flux_cal_name, ref_ant, caldir, iter_num_final, True, bandpass_name)
+print('''
+beginning gain calibration pass 3. 
+Refant is %s
+''' %ref_ant)
+gaincal_name = final_gaincal(msname, minsnr, flux_cal_2_name, flux_cal_name, ref_ant, caldir, iter_num_final, True, bandpass_name)
+
+
+#polarisation calibration
+print('''
+beginning polarisation calibration. 
+Refant is %s
+''' %ref_ant)
+pol_cal_name = '3C286'
+pol_cal_2_name = 'J1513+2338'
+caldir = casadir
+iter_num = 1
+minsnr = 3.0
+
+
+polcal_name, polcal2_name, polcal3_name = final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, iter_num, gaincal_name, bandpass_name)
+
 
 #bootstrap flux density for target source:
 fluxcal_name = final_fluxscale(msname, [flux_cal_name], [phase_cal_name, flux_cal_2_name], caldir, gaincal_name)
+
 print("""applying final calibrations
 """)
 #apply final calibrations
 
-gaintables = [bandpass_name, fluxcal_name]
-interps = ['', '']
+gaintables = [bandpass_name, fluxcal_name, polcal_name, polcal2_name, polcal3_name]
+interps = ['', '', '', '', '']
 
 for s in [flux_cal_name, phase_cal_name, flux_cal_2_name]:
-    gainfields = [flux_cal_name, s]
-    final_applycal(msname, s, gaintables, interps, gainfields)
+    gainfields = [flux_cal_name, s, '', '', '']
+    final_applycal(msname, s, gaintables, interps, gainfields, par_ang = True)
 
 
 ####
 #now apply calibrations to target
 ###
 
-gainfields = [flux_cal_name, phase_cal_name]
-interps = ['', 'linear']
+gainfields = [flux_cal_name, phase_cal_name] #, polcal_name, polcal2_name, polcal3_name]
+interps = ['', 'linear', '', '', '']
 
 final_applycal(msname, target_name, gaintables, interps, gainfields)
+
+flagdata(vis = msname, mode = 'manual', spw = '0:8')
+
+
 
 cell_size = 0.51 #arcsec
 expected_rms_cal = 0.263 #mJy
@@ -194,11 +227,8 @@ for s_key in field_dict:
           usescratch = True)
 
 
-'''
+
 #inspect data after it has been calibrated
 for s in [flux_cal_name, phase_cal_name]:#, target_name]:
     diagnostic_plotms(msname, caldir, s)
-
-
-
-
+'''
