@@ -273,6 +273,11 @@ def import_data(datafile, flagfile, msname):
     
     """
     import the GMRT data into CASA-readable ms file
+    
+    input:
+    datafile: name of input data file (in fits format)
+    flagfile: name of input flag file
+    msname: name of output CASA ms file
     """
     
     #import the data with importgmrt
@@ -325,12 +330,12 @@ def auto_tf_flagging(msname):
     return True
 
 
-def auto_r_flagging(msname):
+def auto_r_flagging(msname, fields = ''):
     """
     perform automatic flagging using rflag algorithm
     """
     default('flagdata')
-    flagdata(vis = msname, mode = 'rflag', ntime = 'scan', combinescans = False, datacolumn = 'corrected', winsize = 3, timedevscale = 5, freqdevscale = 5, action = 'apply', flagbackup = True)
+    flagdata(vis = msname, mode = 'rflag', field = fields, ntime = 'scan', combinescans = False, datacolumn = 'corrected', winsize = 3, timedevscale = 5, freqdevscale = 5, action = 'apply', flagbackup = True)
     return True
     
 
@@ -342,7 +347,7 @@ def init_setjy(msname, flux_cal_name):
     setjy_res = setjy(vis = msname, field = flux_cal_name, standard = 'Perley-Butler 2013', scalebychan = True, usescratch = True)
     return setjy_res
 
-def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
+def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num, spwin = '0:150~174', flux_cal_scan = ''):
     
     """
     perform initial bandpass calibration. steps:
@@ -350,7 +355,6 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
     2) initial bandpass calibration using flux calibrator, taking solutions from phase cal in step 1
     
     """
-    spwin = '0:150~174'
     
     for step in ['cycle1', 'final']:
         gaintables = []
@@ -362,6 +366,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
+                scan = flux_cal_scan,
                 refant = ref_ant,
                 spw = spwin,
                 calmode = 'p',
@@ -382,6 +387,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         bandpass(vis = msname,
                  caltable = bandpass_name,
                  field = flux_cal_name,
+                 scan = flux_cal_scan,
                  solint = 'inf',
                  solnorm = True,
                  minsnr = minsnr,
@@ -399,6 +405,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
+                scan = flux_cal_scan,
                 selectdata = True,
                 solint = 'int',
                 refant = ref_ant,
@@ -421,6 +428,7 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
                  caltable = bandpass_name,
                  selectdata = True,
                  field = flux_cal_name,
+                 scan = flux_cal_scan,
                  solint = 'inf',
                  combine = 'scan,field',
                  refant = ref_ant,
@@ -446,9 +454,8 @@ def init_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
 
 
 
-def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
+def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num, spwin = '0:150~174', flux_cal_scan = ''):
     
-    spwin = '0:150~174'
     
     for step in ['final']:
         gaintables = []
@@ -460,6 +467,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
+                scan = flux_cal_scan,
                 refant = ref_ant,
                 spw = spwin,
                 calmode = 'p',
@@ -481,6 +489,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         bandpass(vis = msname,
                  caltable = bandpass_name,
                  field = flux_cal_name,
+                 scan = flux_cal_scan,
                  solint = 'inf',
                  solnorm = True,
                  minsnr = minsnr,
@@ -498,6 +507,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
         gaincal(vis = msname,
                 caltable = gaincal_name,
                 field = flux_cal_name,
+                scan = flux_cal_scan,
                 selectdata = True,
                 solint = 'int',
                 refant = ref_ant,
@@ -520,6 +530,7 @@ def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
                  caltable = bandpass_name,
                  selectdata = True,
                  field = flux_cal_name,
+                 scan = flux_cal_scan,
                  solint = 'inf',
                  combine = 'scan,field',
                  refant = ref_ant,
@@ -533,14 +544,14 @@ def final_bandpass(msname, minsnr, flux_cal_name, ref_ant, caldir, iter_num):
 
 
 
-def final_gaincal(msname, minsnr, field_name, flux_cal_name, ref_ant, caldir, iter_num, append_bool, bandpass_name):
+def final_gaincal(msname, minsnr, field_name, flux_cal_name, ref_ant, caldir, iter_num, append_bool, bandpass_name, spwin = '0:20~240', field_scan = ''):
     
     gaintables = [bandpass_name]
-    spwin = '0:20~240'
     gaincal_name = '%s%s_gaincal_final.Gap' %(caldir, flux_cal_name)
     gaincal(vis = msname,
             caltable = gaincal_name,
             field = field_name,
+            scan = field_scan,
             solint = 'int',
             spw = spwin,
             refant = ref_ant,
@@ -563,7 +574,7 @@ def final_gaincal(msname, minsnr, field_name, flux_cal_name, ref_ant, caldir, it
 
 
 
-def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, iter_num, gaincal_name, bandpass_name):
+def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, iter_num, gaincal_name, bandpass_name, pol_cal_scan = ''):
     if pol_cal_name == '3C286':
         alpha = -0.4605 #from perley & butler 2013
         pol_pa  = 33.0*np.pi/180.0 #pa of 3C286
@@ -597,6 +608,7 @@ def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, 
     gaincal(vis = msname,
             caltable = polcal_name,
             field = pol_cal_name,
+            scan = pol_cal_scan,
             spw = spwin,
             gaintype = 'KCROSS',
             solint = 'inf', 
@@ -607,7 +619,7 @@ def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, 
             interp = ['nearest', 'linear'],
             parang = True)
 
-    plotcal(caltable = polcal_name , xaxis = 'antenna', yaxis = 'delay')
+    plotcal(caltable = polcal_name , xaxis = 'antenna', yaxis = 'delay', figfile = '%s' %polcal_name.replace('.Kcross', '_delay_antenna.png'))#, showgui = False)
     
     """
     solve for leakage terms
@@ -627,10 +639,12 @@ def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, 
     
     plotcal(caltable = polcal2_name, 
             xaxis = 'chan',
-            yaxis='amp', 
-            spw='',
-            field='',
-            iteration='antenna')
+            yaxis = 'amp', 
+            spw = '',
+            field = '',
+            iteration = 'antenna',
+            figfile = '%s' %polcal2_name.replace('.D', '_amp_chan.png'))
+            #showgui = False)
 
     plotcal(caltable = polcal2_name, 
             xaxis = 'chan',
@@ -638,7 +652,9 @@ def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, 
             spw='',
             field='',
             plotrange=[-1,-1,-180,180],
-            iteration='antenna')
+            iteration='antenna',
+            figfile = '%s' %polcal2_name.replace('.D', '_phase_chan.png'))
+            #showgui = False)
     
     """
     solve for R-L polarisation angle
@@ -656,13 +672,15 @@ def final_polcal(msname, minsnr, pol_cal_name, pol_cal_2_name, ref_ant, caldir, 
 
     plotcal(caltable = polcal3_name,
             xaxis = 'chan',
-            yaxis = 'phase')
+            yaxis = 'phase',
+            figfile = '%s' %polcal3_name.replace('.X', 'phase_chan.png'))
+            #showgui = False)
     
     return polcal_name, polcal2_name, polcal3_name
     
     
 
-def final_fluxscale(msname, flux_cal_name, other_cals, caldir, gaincal_name):
+def final_fluxscale(msname, flux_cal_name, other_cals, caldir, gaincal_name, flux_cal_scan = ''):
     
     #flux_cal_name is a list, ['3C286']
     fluxcal_name = '%s%s_fluxcal.Ga_fluxscale' %(caldir, flux_cal_name[0])
@@ -699,7 +717,7 @@ def final_applycal(msname, flux_cal_name, gaintables, interps, gainfields, par_a
     return True
                                   
 
-def diagnostic_plotms(msname, caldir, flux_cal_name):
+def diagnostic_plotms(msname, caldir, flux_cal_name, flux_cal_scan = ''):
     default('plotms')
     xdatacolumn = 'corrected'
     ydatacolumn = 'corrected'
@@ -719,19 +737,19 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
     
     field_name = flux_cal_name
     plot_file = '%s%s_amp_time_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
 
     xaxis = 'baseline'
     plot_file = '%s%s_amp_baseline_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = 'channel', plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = 'channel', plotfile = plot_file, showgui = showgui)
     
     xaxis = 'chan'
     plot_file = '%s%s_amp_chan_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
     
     xaxis = 'uvwave'
     plot_file = '%s%s_amp_uvwave_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui)
     
     yaxis = 'phase'
     plotrange = [0,0,-180,180]
@@ -740,27 +758,27 @@ def diagnostic_plotms(msname, caldir, flux_cal_name):
         xaxis = 'time'
         antenna = str(i)
         plot_file = '%s%s_phase_time_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
         
         xaxis = 'chan'
         plot_file = '%s%s_phase_chan_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
         xaxis = 'uvwave'
         plot_file = '%s%s_phase_uvwave_ant%i_corrected.png' %(caldir, flux_cal_name, i)
-        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+        plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, antenna = antenna, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
         
 
     plotrange = [0,0,0,0]
     antenna = ''
     xaxis = 'amp'
     plot_file = '%s%s_phase_amp_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
     xaxis = 'real'
     yaxis = 'imag'
     plot_file = '%s%s_imag_real_corrected.png' %(caldir, flux_cal_name)
-    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
+    plotms(vis = msname, selectdata = True, xdatacolumn = xdatacolumn, ydatacolumn = ydatacolumn, correlation = correlation, overwrite = overwrite, field = field_name, scan = flux_cal_scan, xaxis = xaxis, yaxis = yaxis, coloraxis = coloraxis, plotfile = plot_file, showgui = showgui, plotrange = plotrange)
 
 
 
